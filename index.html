@@ -5,50 +5,114 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wu Tong — Automotive HMI Designer &amp; Developer</title>
 <meta name="description" content="Personal homepage of Wu Tong, an automotive HMI designer and developer based in Nanjing, China. Instrument clusters, cockpit interfaces, design systems and software prototypes.">
+<meta name="theme-color" content="#0a0c10">
 <style>
   :root{
-    --bg:#0b0e13; --panel:#12161e; --line:#232a36; --text:#e8ecf1; --muted:#9aa7b5; --accent:#ffb340;
+    --bg:#0a0c10; --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+    --line:rgba(255,255,255,.09); --text:#eef1f5; --muted:#9aa7b5; --faint:#6b7889;
+    --accent:#f5b544; --accent2:#ff8a5c; --radius:18px;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.65}
-  .wrap{max-width:860px;margin:0 auto;padding:64px 24px 80px}
-  header{border-bottom:1px solid var(--line);padding-bottom:36px}
-  .tag{display:inline-block;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:4px 12px;margin-bottom:20px}
-  h1{font-size:44px;line-height:1.15;font-weight:700}
-  h1 .cn{color:var(--muted);font-weight:400;font-size:30px}
-  .role{margin-top:12px;font-size:19px;color:var(--text)}
-  .loc{margin-top:6px;color:var(--muted);font-size:15px}
-  section{margin-top:44px}
-  h2{font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
-  p{color:#cdd6df;max-width:68ch}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);line-height:1.65;overflow-x:hidden;
+    font-family:"Avenir Next","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif}
+  ::selection{background:var(--accent);color:#14100a}
+
+  /* ambient background */
+  .bg{position:fixed;inset:0;z-index:-2;background:
+    radial-gradient(900px 480px at 85% -10%, rgba(245,181,68,.13), transparent 60%),
+    radial-gradient(700px 500px at -10% 30%, rgba(94,140,255,.10), transparent 60%),
+    radial-gradient(800px 600px at 50% 115%, rgba(255,138,92,.07), transparent 60%), var(--bg)}
+  .grid-overlay{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
+    background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+    background-size:56px 56px;
+    -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 75%);
+            mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 75%)}
+
+  .wrap{max-width:920px;margin:0 auto;padding:72px 24px 72px}
+
+  /* hero */
+  .tag{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);
+    border:1px solid rgba(245,181,68,.35);border-radius:999px;padding:5px 14px;background:rgba(245,181,68,.06)}
+  .tag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+  h1{font-size:clamp(52px,9vw,88px);line-height:1.04;font-weight:800;letter-spacing:-.02em;margin-top:26px}
+  h1 .cn{display:block;font-size:clamp(22px,3.4vw,30px);font-weight:500;letter-spacing:.42em;margin-top:14px;
+    color:transparent;-webkit-text-stroke:1px rgba(238,241,245,.45)}
+  .role{margin-top:22px;font-size:clamp(18px,2.6vw,22px);font-weight:600;
+    background:linear-gradient(92deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;width:fit-content}
+  .loc{margin-top:8px;color:var(--muted);font-size:15px;letter-spacing:.06em}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+  .btn{display:inline-block;padding:11px 22px;border-radius:999px;font-size:15px;font-weight:600;transition:.25s;border:1px solid var(--line)}
+  a.btn{color:var(--text);text-decoration:none;background:var(--panel)}
+  a.btn:hover{transform:translateY(-2px);border-color:rgba(245,181,68,.5);background:var(--panel2)}
+  a.btn.primary{background:linear-gradient(92deg,var(--accent),var(--accent2));color:#181106;border:none}
+  a.btn.primary:hover{filter:brightness(1.07)}
+  .stats{display:flex;gap:0;flex-wrap:wrap;margin-top:44px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);overflow:hidden}
+  .stat{flex:1 1 180px;padding:18px 22px;border-right:1px solid var(--line)}
+  .stat:last-child{border-right:none}
+  .stat b{display:block;font-size:19px;font-weight:700}
+  .stat span{font-size:13px;color:var(--muted)}
+
+  section{margin-top:64px}
+  .shead{display:flex;align-items:center;gap:16px;margin-bottom:22px}
+  .shead h2{font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+  .shead::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+  .shead .no{font-size:12px;color:var(--faint);letter-spacing:.1em}
+  p.lead{color:#cdd6df;max-width:68ch;font-size:16.5px}
+
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media (max-width:640px){.grid{grid-template-columns:1fr}h1{font-size:34px}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
-  .card h3{font-size:17px;margin-bottom:8px}
+  @media (max-width:640px){.grid{grid-template-columns:1fr}.stat{border-right:none;border-bottom:1px solid var(--line)}.stat:last-child{border-bottom:none}}
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;transition:.3s;overflow:hidden}
+  .card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,rgba(245,181,68,.55),transparent);opacity:0;transition:.3s}
+  .card:hover{transform:translateY(-4px);background:var(--panel2);border-color:rgba(255,255,255,.16)}
+  .card:hover::before{opacity:1}
+  .card .idx{font-size:12px;color:var(--faint);letter-spacing:.14em}
+  .card h3{font-size:17.5px;margin:8px 0 8px;font-weight:700}
   .card p{font-size:14.5px;color:var(--muted)}
+  .card .tags{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  .card .tags i{font-style:normal;font-size:12px;color:#d8b26a;border:1px solid rgba(245,181,68,.28);border-radius:999px;padding:2px 10px;background:rgba(245,181,68,.05)}
+
   ul.skills{list-style:none;display:flex;flex-wrap:wrap;gap:10px}
-  ul.skills li{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 14px;font-size:14px;color:#cdd6df}
+  ul.skills li{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 16px;font-size:14px;color:#cdd6df;transition:.25s}
+  ul.skills li:hover{border-color:rgba(245,181,68,.5);color:var(--text);transform:translateY(-2px)}
+
+  .contact p{font-size:16.5px;color:#cdd6df}
   a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
-  footer{margin-top:64px;border-top:1px solid var(--line);padding-top:24px;color:var(--muted);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  footer{margin-top:72px;border-top:1px solid var(--line);padding-top:24px;color:var(--muted);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
 </style>
 </head>
 <body>
+<div class="bg"></div><div class="grid-overlay"></div>
 <div class="wrap">
-  <header>
+
+  <header class="reveal in">
     <span class="tag">Personal Homepage</span>
-    <h1>Wu Tong <span class="cn">吴桐</span></h1>
+    <h1>Wu Tong<span class="cn">吴 桐</span></h1>
     <div class="role">Automotive HMI Designer &amp; Developer</div>
-    <div class="loc">Nanjing, China</div>
+    <div class="loc">NANJING · CHINA</div>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/Alcindora">GitHub ↗</a>
+      <a class="btn" href="mailto:leon.wutong@gmail.com">leon.wutong@gmail.com</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>5120 × 1440</b><span>Full-width cockpit displays</span></div>
+      <div class="stat"><b>1920 × 532</b><span>Digital cluster layouts</span></div>
+      <div class="stat"><b>Design → Code</b><span>Systems, prototypes, software</span></div>
+    </div>
   </header>
 
-  <section>
-    <h2>About</h2>
-    <p>I design and build human–machine interfaces for cars — digital instrument clusters, in-vehicle infotainment and connected cockpit experiences. My work sits between design and engineering: I create interface design systems in Figma, build interactive prototypes, and develop working software, from HMI interface themes to utility mini-programs and automation tools.</p>
+  <section class="reveal">
+    <div class="shead"><span class="no">01</span><h2>About</h2></div>
+    <p class="lead">I design and build human–machine interfaces for cars — digital instrument clusters, in-vehicle infotainment and connected cockpit experiences. My work sits between design and engineering: I create interface design systems in Figma, build interactive prototypes, and develop working software, from HMI interface themes to utility mini-programs and automation tools.</p>
   </section>
 
-  <section>
-    <h2>What I Do</h2>
+  <section class="reveal">
+    <div class="shead"><span class="no">02</span><h2>What I Do</h2></div>
     <div class="grid">
       <div class="card">
         <h3>HMI Interface Design</h3>
@@ -69,46 +133,58 @@
     </div>
   </section>
 
-  <section>
-    <h2>Selected Work</h2>
+  <section class="reveal">
+    <div class="shead"><span class="no">03</span><h2>Selected Work</h2></div>
     <div class="grid">
       <div class="card">
+        <div class="idx">W — 01</div>
         <h3>Car Instrument Cluster UI</h3>
         <p>A detailed 1920×532 digital cluster interface with layered gauges, drive modes and theme variants, built as a fully editable design system.</p>
+        <div class="tags"><i>Figma</i><i>Design System</i><i>Cluster</i></div>
       </div>
       <div class="card">
+        <div class="idx">W — 02</div>
         <h3>BotForge</h3>
         <p>A virtual 3D office populated by AI agent characters — an experiment in giving software agents a shared, visible workspace.</p>
+        <div class="tags"><i>3D Space</i><i>AI Agents</i></div>
       </div>
       <div class="card">
+        <div class="idx">W — 03</div>
         <h3>Decoration Quote Mini-Program</h3>
         <p>A WeChat mini-program that turns construction drawings into itemised renovation quotations automatically.</p>
+        <div class="tags"><i>WeChat</i><i>Automation</i></div>
       </div>
       <div class="card">
+        <div class="idx">W — 04</div>
         <h3>Daily Motion Sketches</h3>
         <p>A daily short-video practice exploring generative scenery, motion and sound — produced with an automated pipeline I built.</p>
+        <div class="tags"><i>Generative</i><i>Video</i></div>
       </div>
     </div>
   </section>
 
-  <section>
-    <h2>Tools</h2>
+  <section class="reveal">
+    <div class="shead"><span class="no">04</span><h2>Tools</h2></div>
     <ul class="skills">
       <li>Figma</li><li>Sketch</li><li>Photoshop</li><li>HMI Design Systems</li>
       <li>HTML / CSS / JavaScript</li><li>Prototyping</li><li>WeChat Mini-Programs</li><li>Git &amp; GitHub</li>
     </ul>
   </section>
 
-  <section>
-    <h2>Contact</h2>
+  <section class="reveal contact">
+    <div class="shead"><span class="no">05</span><h2>Contact</h2></div>
     <p>GitHub: <a href="https://github.com/Alcindora">github.com/Alcindora</a><br>
     Email: <a href="mailto:leon.wutong@gmail.com">leon.wutong@gmail.com</a></p>
   </section>
 
   <footer>
     <span>© 2026 Wu Tong</span>
-    <span>Designed &amp; built by hand — no templates.</span>
+    <span>wutong.qd.je · Designed &amp; built by hand — no templates.</span>
   </footer>
 </div>
+<script>
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .08 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
 </body>
 </html>
