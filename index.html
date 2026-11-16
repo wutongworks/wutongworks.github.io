@@ -53,6 +53,8 @@
   let mx = 0, my = 0, tx = 0, ty = 0;
   const fling = { vx: 0, vy: 0 };
   let stirBoost = 0, lastAng = null;                 // stirring the vortex
+  let surgeBoost = 1;                                // periodic disk swell, computed per frame
+  let jetSparks = [];
   let pulsar = { x: 0, y: 0, t: -1, next: 5 };       // ambient pulsar easter egg
 
   // film grain tile
@@ -70,7 +72,7 @@
   let stars = [];
   function buildStars() {
     stars = [];
-    const n = Math.min(1250, Math.floor(W * H / 1500));
+    const n = Math.min(1400, Math.floor(W * H / 1350));
     for (let i = 0; i < n; i++) {
       const kind = Math.random();
       stars.push({
@@ -86,7 +88,7 @@
 
   // ---------- accretion disk: plasma streams ----------
   const disk = [];
-  for (let i = 0; i < 1500; i++) {
+  for (let i = 0; i < 1900; i++) {
     const rad = 1.45 + Math.pow(Math.random(), 1.6) * 1.85;
     disk.push({ a: Math.random() * Math.PI * 2, rad,
       sp: 1.05 / Math.pow(rad, 1.5) * (0.8 + Math.random() * 0.45),
@@ -104,7 +106,7 @@
 
   // ---------- vortex core: matter spiralling in, never a hard disc ----------
   const vortex = [];
-  for (let i = 0; i < 460; i++) {
+  for (let i = 0; i < 620; i++) {
     vortex.push({ a: Math.random() * Math.PI * 2, r: 0.18 + Math.pow(Math.random(), 1.4) * 1.5,
       seed: Math.random(), w: Math.random() * 1.5 + 0.5 });
   }
@@ -158,13 +160,13 @@
   function holeX() { return CX + mx * 18; }
   function holeY() { return CY + my * 12; }
   function spawnBurst(x, y, power) {
-    const parts = [], n = Math.floor(110 * power);
+    const parts = [], n = Math.floor(155 * power);
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2, v = (Math.random() * 6.4 + 0.7) * power;
       parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1, decay: 0.007 + Math.random() * 0.018,
         blue: Math.random() < 0.55, s: Math.random() * 2 + 0.5 });
     }
-    bursts.push({ parts, ring: 0, ringA: 0.85 * Math.min(power, 1.7), x, y });
+    bursts.push({ parts, ring: 0, ring2: -14, ringA: 0.85 * Math.min(power, 1.7), x, y });
     flash = Math.min(0.6, flash + 0.24 * power);
     if (power > 1.35) shake = Math.min(9, shake + (power - 1.2) * 6);
     for (const s of stars) {
@@ -261,7 +263,7 @@
     cv.style.width = W + 'px'; cv.style.height = H + 'px';
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     CX = W / 2; CY = H * 0.46; UNIT = Math.min(W, H);
-    R = UNIT * 0.185;
+    R = UNIT * 0.225;
     buildStars();
   }
   addEventListener('resize', resize);
@@ -272,7 +274,7 @@
     const ca = Math.cos(rot * s.z), sa = Math.sin(rot * s.z);
     let x = (s.x * ca - s.y * sa) * UNIT * 0.62 * zoom;
     let y = (s.x * sa + s.y * ca) * UNIT * 0.62 * zoom;
-    if (warp > 0.01) { const d = Math.hypot(s.x, s.y) + 0.001; const push = warp * s.z * UNIT * 0.6 * d; x += s.x / d * push * zoom; y += s.y / d * push * zoom; }
+    if (warp > 0.01) { const d = Math.hypot(s.x, s.y) + 0.001; const push = warp * s.z * UNIT * 0.85 * d; x += s.x / d * push * zoom; y += s.y / d * push * zoom; }
     return [CX + x + mx * 20 * s.z + s.ox, CY + y + my * 13 * s.z + s.oy];
   }
 
@@ -284,6 +286,8 @@
     if (warpDir === 1) { warp += 0.022; if (warp >= 1) warpDir = -1; }
     else if (warpDir === -1) { warp -= 0.013; if (warp <= 0) { warp = 0; warpDir = 0; } }
     flash *= 0.92; shake *= 0.88; stirBoost *= 0.985;
+    const cyc = t % 21;
+    surgeBoost = cyc > 16.5 ? 1 + Math.sin((cyc - 16.5) / 4.5 * Math.PI) * 0.55 : 1;
     // pulsar easter egg timer
     pulsar.next -= 0.016;
     if (pulsar.next <= 0 && pulsar.t < 0) { pulsar.t = 0; pulsar.x = W * (0.15 + Math.random() * 0.7); pulsar.y = H * (0.12 + Math.random() * 0.5); pulsar.next = 9 + Math.random() * 9; }
@@ -291,7 +295,7 @@
     energy *= 0.9985;
     if (jet > 0) jet -= 0.016;
     flareT -= 0.016;
-    if (flareT <= 0 && flareR < 0) { flareR = 1.25; flareT = 6 + Math.random() * 5; }
+    if (flareT <= 0 && flareR < 0) { flareR = 1.25; flareT = 4 + Math.random() * 4; }
     if (flareR > 0) { flareR += 0.045; if (flareR > 3.6) flareR = -1; }
     if (performance.now() - lastAct > 26000 && warpDir === 0) { warpDir = 1; lastAct = performance.now(); }
     if (ptr.down && !well && performance.now() - ptr.downT > 320 && ptr.moved < 16)
@@ -302,7 +306,7 @@
     ctx.save(); ctx.translate(shx, shy);
 
     ctx.clearRect(-12, -12, W + 24, H + 24);
-    const breathe = 1 + 0.012 * Math.sin(t * 0.5);
+    const breathe = 1 + 0.02 * Math.sin(t * 0.5);
     const base = ctx.createRadialGradient(CX + mx * 8, CY + my * 6, 0, CX, CY, Math.max(W, H) * 0.8);
     base.addColorStop(0, '#050a1e'); base.addColorStop(0.45, '#02040e'); base.addColorStop(1, '#000208');
     ctx.fillStyle = base; ctx.fillRect(-12, -12, W + 24, H + 24);
@@ -310,10 +314,11 @@
     // nebula: deep indigo / teal only, very restrained
     ctx.save(); ctx.globalCompositeOperation = 'screen';
     const clouds = [
-      [0.2 + 0.03 * Math.sin(t * 0.1), 0.22 + 0.02 * Math.cos(t * 0.09), 0.6, '30,58,138', 0.30],
-      [0.82 + 0.03 * Math.cos(t * 0.08), 0.3 + 0.03 * Math.sin(t * 0.1), 0.52, '21,94,117', 0.20],
-      [0.55 + 0.04 * Math.sin(t * 0.07 + 2), 0.88 + 0.02 * Math.cos(t * 0.12), 0.48, '49,46,129', 0.22],
-      [0.1 + 0.02 * Math.cos(t * 0.1 + 4), 0.8 + 0.03 * Math.sin(t * 0.08), 0.42, '8,74,110', 0.16]
+      [0.2 + 0.03 * Math.sin(t * 0.1), 0.22 + 0.02 * Math.cos(t * 0.09), 0.62, '30,58,138', 0.42],
+      [0.82 + 0.03 * Math.cos(t * 0.08), 0.3 + 0.03 * Math.sin(t * 0.1), 0.54, '21,94,117', 0.28],
+      [0.55 + 0.04 * Math.sin(t * 0.07 + 2), 0.88 + 0.02 * Math.cos(t * 0.12), 0.5, '49,46,129', 0.30],
+      [0.1 + 0.02 * Math.cos(t * 0.1 + 4), 0.8 + 0.03 * Math.sin(t * 0.08), 0.44, '8,74,110', 0.22],
+      [0.68 + 0.03 * Math.sin(t * 0.06 + 1), 0.62 + 0.03 * Math.cos(t * 0.09 + 3), 0.46, '88,28,135', 0.20]
     ];
     for (const [fx, fy, fr, rgb, al] of clouds) {
       const nx = fx * W + mx * 14, ny = fy * H + my * 10, nr = fr * Math.max(W, H);
@@ -323,7 +328,7 @@
     }
     ctx.restore();
 
-    const cx = holeX(), cy = holeY(), Rz = R * zoom * breathe * (1 + warp * 0.3) * (1 + energy * 0.012);
+    const cx = holeX(), cy = holeY(), Rz = R * zoom * breathe * (1 + warp * 0.45) * (1 + energy * 0.012);
 
     // pulsar rings
     if (pulsar.t >= 0) {
@@ -352,7 +357,7 @@
       const tw = 0.55 + 0.45 * Math.sin(t * (1 + s.z * 2.2) + s.tw);
       const a = tw * (0.3 + s.z * 0.7) * (1 + warp * 0.7);
       if (warp > 0.03) {
-        const oxp = CX + (gx - CX) * (1 - warp * 0.22 * s.z), oyp = CY + (gy - CY) * (1 - warp * 0.22 * s.z);
+        const oxp = CX + (gx - CX) * (1 - warp * 0.34 * s.z), oyp = CY + (gy - CY) * (1 - warp * 0.34 * s.z);
         ctx.strokeStyle = s.blue ? `rgba(186,230,253,${a * 0.85})` : `rgba(240,249,255,${a * 0.85})`;
         ctx.lineWidth = s.r * 0.85; ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(oxp, oyp); ctx.lineTo(gx, gy); ctx.stroke();
@@ -432,8 +437,19 @@
     }
 
     // relativistic jets
+    const ja = jet > 0 ? Math.min(1, jet / 1.2) * 0.85 : 0;
     if (jet > 0) {
-      const ja = Math.min(1, jet / 1.2) * 0.8;
+      for (let k = 0; k < 3; k++)
+        jetSparks.push({ x: cx + (Math.random() - 0.5) * Rz * 0.2, y: cy, vy: (Math.random() < 0.5 ? -1 : 1) * (7 + Math.random() * 7), life: 1 });
+    }
+    for (const s of jetSparks) {
+      s.y += s.vy; s.life -= 0.02;
+      ctx.beginPath(); ctx.arc(s.x, s.y, 1.6 * s.life + 0.3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(224,242,254,${Math.max(0, s.life) * 0.85})`;
+      ctx.shadowColor = 'rgba(125,211,252,.9)'; ctx.shadowBlur = 8; ctx.fill(); ctx.shadowBlur = 0;
+    }
+    jetSparks = jetSparks.filter(s => s.life > 0);
+    if (jet > 0) {
       for (const dir of [-1, 1]) {
         const jg = ctx.createLinearGradient(cx, cy, cx, cy + dir * H * 0.55);
         jg.addColorStop(0, `rgba(224,242,254,${ja})`); jg.addColorStop(0.22, `rgba(125,211,252,${ja * 0.45})`); jg.addColorStop(1, 'rgba(56,189,248,0)');
@@ -476,9 +492,13 @@
 
     // bursts
     for (const b of bursts) {
-      b.ring += 3.8; b.ringA *= 0.94;
+      b.ring += 4.4; b.ring2 += 2.6; b.ringA *= 0.94;
       ctx.beginPath(); ctx.arc(b.x, b.y, b.ring, 0, Math.PI * 2);
       ctx.strokeStyle = `rgba(186,230,253,${b.ringA})`; ctx.lineWidth = 1.5; ctx.stroke();
+      if (b.ring2 > 0) {
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.ring2, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(147,197,253,${b.ringA * 0.55})`; ctx.lineWidth = 2.6; ctx.stroke();
+      }
       for (const p of b.parts) {
         p.x += p.vx; p.y += p.vy; p.vx *= 0.985; p.vy *= 0.985; p.life -= p.decay;
         if (p.life <= 0) continue;
@@ -499,7 +519,7 @@
 
     // film grain
     ctx.save();
-    ctx.globalAlpha = 0.05; ctx.globalCompositeOperation = 'overlay';
+    ctx.globalAlpha = 0.06; ctx.globalCompositeOperation = 'overlay';
     const gx = (Math.random() * 140) | 0, gy = (Math.random() * 140) | 0;
     for (let x = -gx; x < W; x += 140) for (let y = -gy; y < H; y += 140) ctx.drawImage(grain, x, y);
     ctx.restore();
@@ -537,9 +557,9 @@
         if (wd < 260 && wd > 2) { const f = (1 - wd / 260) * (2 + well.power * 7); ox += -wy / wd * f; oy += wx / wd * f * 0.335; }
       }
       const beam = 0.5 + 0.85 * Math.max(0, -Math.cos(p.a));       // approaching side hotter
-      let al = (0.16 + p.seed * 0.3) * (0.45 + 0.55 * Math.min(1, beam)) * boost;
+      let al = (0.21 + p.seed * 0.37) * (0.45 + 0.55 * Math.min(1, beam)) * boost * surgeBoost;
       if (d2 < 28900 && d2 > 4) al *= 1 + (1 - Math.sqrt(d2) / 170) * 0.9;   // fingertip lights the plasma
-      if (flareR > 0) { const fd = Math.abs(p.rad - flareR); if (fd < 0.3) al *= 1 + (1 - fd / 0.3) * 1.6; }
+      if (flareR > 0) { const fd = Math.abs(p.rad - flareR); if (fd < 0.3) al *= 1 + (1 - fd / 0.3) * 2.3; }
       ctx.strokeStyle = diskColor(p.rad, Math.min(0.85, al));
       ctx.lineWidth = p.w;
       ctx.beginPath(); ctx.moveTo(x1 + ox, y1 + oy); ctx.lineTo(x2 + ox, y2 + oy); ctx.stroke();
