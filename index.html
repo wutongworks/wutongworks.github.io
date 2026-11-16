@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wu Tong — Automotive HMI Designer &amp; Developer</title>
 <meta name="description" content="Personal homepage of Wu Tong, an automotive HMI designer and developer based in Nanjing, China. Instrument clusters, cockpit interfaces, design systems and software prototypes.">
-<meta name="theme-color" content="#0a0c10">
+<meta name="theme-color" content="#07080c">
 <style>
   :root{
-    --bg:#0a0c10; --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+    --bg:#07080c; --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
     --line:rgba(255,255,255,.09); --text:#eef1f5; --muted:#9aa7b5; --faint:#6b7889;
-    --accent:#f5b544; --accent2:#ff8a5c; --radius:18px;
+    --accent:#f5b544; --accent2:#ff8a5c; --cyan:#57c8ff; --radius:18px;
+    --mode:#f5b544;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -19,25 +20,50 @@
   ::selection{background:var(--accent);color:#14100a}
 
   /* ambient background */
-  .bg{position:fixed;inset:0;z-index:-2;background:
-    radial-gradient(900px 480px at 85% -10%, rgba(245,181,68,.13), transparent 60%),
-    radial-gradient(700px 500px at -10% 30%, rgba(94,140,255,.10), transparent 60%),
-    radial-gradient(800px 600px at 50% 115%, rgba(255,138,92,.07), transparent 60%), var(--bg)}
-  .grid-overlay{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
+  .bg{position:fixed;inset:0;z-index:-3;background:var(--bg)}
+  .aurora{position:fixed;inset:-20%;z-index:-2;pointer-events:none;filter:blur(70px);opacity:.85;
+    background:
+      radial-gradient(560px 380px at 82% 6%, rgba(245,181,68,.20), transparent 65%),
+      radial-gradient(520px 420px at 8% 26%, rgba(87,200,255,.13), transparent 65%),
+      radial-gradient(640px 480px at 52% 108%, rgba(255,138,92,.13), transparent 65%);
+    animation:drift 18s ease-in-out infinite alternate}
+  @keyframes drift{from{transform:translate3d(-2%,-1%,0) scale(1)}to{transform:translate3d(2%,2%,0) scale(1.06)}}
+  .grid-overlay{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55;
     background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
     background-size:56px 56px;
-    -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 75%);
-            mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 75%)}
+    -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 78%);
+            mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 78%)}
+  #spot{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(520px circle at var(--mx,50%) var(--my,18%), rgba(245,181,68,.07), transparent 65%)}
 
-  .wrap{max-width:920px;margin:0 auto;padding:72px 24px 72px}
+  /* top bar */
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    background:rgba(7,8,12,.55);border-bottom:1px solid rgba(255,255,255,.06)}
+  .topbar-in{max-width:1080px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:18px}
+  .brand{font-weight:800;letter-spacing:.18em;font-size:13px;color:var(--text);text-decoration:none}
+  .brand em{font-style:normal;color:var(--accent)}
+  .topbar nav{margin-left:auto;display:flex;gap:20px}
+  .topbar nav a{color:var(--muted);text-decoration:none;font-size:13px;letter-spacing:.08em}
+  .topbar nav a:hover{color:var(--text)}
+  .clock{font-size:12px;color:var(--faint);letter-spacing:.12em;font-variant-numeric:tabular-nums;white-space:nowrap}
+  @media (max-width:640px){.topbar nav{display:none}}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:118px 24px 72px;position:relative;z-index:1}
 
   /* hero */
+  .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center}
+  @media (max-width:860px){.hero{grid-template-columns:1fr}}
   .tag{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);
     border:1px solid rgba(245,181,68,.35);border-radius:999px;padding:5px 14px;background:rgba(245,181,68,.06)}
-  .tag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
-  h1{font-size:clamp(52px,9vw,88px);line-height:1.04;font-weight:800;letter-spacing:-.02em;margin-top:26px}
+  .tag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2.2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  h1{font-size:clamp(56px,9vw,96px);line-height:1.06;font-weight:800;letter-spacing:-.02em;margin-top:26px;
+    background:linear-gradient(100deg,#eef1f5 25%,var(--accent) 58%,var(--accent2) 78%,#cdd6df 100%);
+    background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:shine 7s ease-in-out infinite}
+  @keyframes shine{0%,100%{background-position:0% 0}50%{background-position:90% 0}}
   h1 .cn{display:block;font-size:clamp(22px,3.4vw,30px);font-weight:500;letter-spacing:.42em;margin-top:14px;
-    color:transparent;-webkit-text-stroke:1px rgba(238,241,245,.45)}
+    color:transparent;-webkit-text-stroke:1px rgba(238,241,245,.45);-webkit-background-clip:initial;background-clip:initial}
   .role{margin-top:22px;font-size:clamp(18px,2.6vw,22px);font-weight:600;
     background:linear-gradient(92deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;width:fit-content}
   .loc{margin-top:8px;color:var(--muted);font-size:15px;letter-spacing:.06em}
@@ -45,13 +71,36 @@
   .btn{display:inline-block;padding:11px 22px;border-radius:999px;font-size:15px;font-weight:600;transition:.25s;border:1px solid var(--line)}
   a.btn{color:var(--text);text-decoration:none;background:var(--panel)}
   a.btn:hover{transform:translateY(-2px);border-color:rgba(245,181,68,.5);background:var(--panel2)}
-  a.btn.primary{background:linear-gradient(92deg,var(--accent),var(--accent2));color:#181106;border:none}
+  a.btn.primary{background:linear-gradient(92deg,var(--accent),var(--accent2));color:#181106;border:none;box-shadow:0 8px 28px rgba(245,181,68,.28)}
   a.btn.primary:hover{filter:brightness(1.07)}
+
+  /* gauge */
+  .gauge-card{position:relative;border:1px solid var(--line);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+    padding:20px 18px 16px;overflow:hidden}
+  .gauge-card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,var(--mode),transparent);opacity:.8;transition:.4s}
+  .gauge-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.22em;color:var(--faint);text-transform:uppercase}
+  .gauge-head b{color:var(--mode);transition:.4s}
+  #gauge{display:block;width:100%;height:auto;margin-top:6px}
+  .modes{display:flex;gap:8px;justify-content:center;margin-top:8px}
+  .modes button{cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--muted);
+    font:600 12px/1 inherit;letter-spacing:.16em;padding:8px 16px;border-radius:999px;transition:.25s}
+  .modes button.on{color:#14100a;background:var(--mode);border-color:transparent}
+  .gauge-note{text-align:center;margin-top:10px;font-size:12px;color:var(--faint)}
+  .gauge-note a{color:var(--accent)}
+
   .stats{display:flex;gap:0;flex-wrap:wrap;margin-top:44px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);overflow:hidden}
   .stat{flex:1 1 180px;padding:18px 22px;border-right:1px solid var(--line)}
   .stat:last-child{border-right:none}
   .stat b{display:block;font-size:19px;font-weight:700}
   .stat span{font-size:13px;color:var(--muted)}
+
+  /* marquee */
+  .marquee{margin-top:52px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+  .marquee-in{display:flex;gap:0;width:max-content;animation:scroll 26s linear infinite;padding:12px 0}
+  .marquee span{font-size:13px;letter-spacing:.34em;color:var(--faint);text-transform:uppercase;padding-right:44px;white-space:nowrap}
+  .marquee span i{font-style:normal;color:var(--accent);padding-right:44px}
+  @keyframes scroll{to{transform:translateX(-50%)}}
 
   section{margin-top:64px}
   .shead{display:flex;align-items:center;gap:16px;margin-bottom:22px}
@@ -62,10 +111,11 @@
 
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   @media (max-width:640px){.grid{grid-template-columns:1fr}.stat{border-right:none;border-bottom:1px solid var(--line)}.stat:last-child{border-bottom:none}}
-  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;transition:.3s;overflow:hidden}
-  .card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,rgba(245,181,68,.55),transparent);opacity:0;transition:.3s}
-  .card:hover{transform:translateY(-4px);background:var(--panel2);border-color:rgba(255,255,255,.16)}
-  .card:hover::before{opacity:1}
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;transition:transform .3s,background .3s,border-color .3s;overflow:hidden;transform-style:preserve-3d;will-change:transform}
+  .card::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:.3s;
+    background:radial-gradient(340px circle at var(--cx,50%) var(--cy,50%), rgba(245,181,68,.10), transparent 65%)}
+  .card:hover{background:var(--panel2);border-color:rgba(255,255,255,.16)}
+  .card:hover::after{opacity:1}
   .card .idx{font-size:12px;color:var(--faint);letter-spacing:.14em}
   .card h3{font-size:17.5px;margin:8px 0 8px;font-weight:700}
   .card p{font-size:14.5px;color:var(--muted)}
@@ -83,30 +133,59 @@
 
   .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
   .reveal.in{opacity:1;transform:none}
-  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+  @media (prefers-reduced-motion:reduce){
+    .reveal{opacity:1;transform:none;transition:none}
+    .aurora,.marquee-in,h1,.tag::before{animation:none}
+  }
 </style>
 </head>
 <body>
-<div class="bg"></div><div class="grid-overlay"></div>
+<div class="bg"></div><div class="aurora"></div><div class="grid-overlay"></div><div id="spot"></div>
+
+<div class="topbar"><div class="topbar-in">
+  <a class="brand" href="#">WUTONG<em>.QD.JE</em></a>
+  <span class="clock" id="clock">NANJING --:--:--</span>
+  <nav>
+    <a href="#about">About</a><a href="#work">Work</a><a href="#tools">Tools</a><a href="#contact">Contact</a>
+    <a href="http://wutong.pp.ua/">Domains ↗</a>
+  </nav>
+</div></div>
+
 <div class="wrap">
 
-  <header class="reveal in">
-    <span class="tag">Personal Homepage</span>
-    <h1>Wu Tong<span class="cn">吴 桐</span></h1>
-    <div class="role">Automotive HMI Designer &amp; Developer</div>
-    <div class="loc">NANJING · CHINA</div>
-    <div class="cta">
-      <a class="btn primary" href="https://github.com/Alcindora">GitHub ↗</a>
-      <a class="btn" href="mailto:leon.wutong@gmail.com">leon.wutong@gmail.com</a>
+  <header class="hero reveal in">
+    <div>
+      <span class="tag">Personal Homepage</span>
+      <h1>Wu Tong<span class="cn">吴 桐</span></h1>
+      <div class="role">Automotive HMI Designer &amp; Developer</div>
+      <div class="loc">NANJING · CHINA</div>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/Alcindora">GitHub ↗</a>
+        <a class="btn" href="/wutong/">Live Cluster Demo ↗</a>
+        <a class="btn" href="mailto:leon.wutong@gmail.com">leon.wutong@gmail.com</a>
+      </div>
     </div>
-    <div class="stats">
-      <div class="stat"><b>5120 × 1440</b><span>Full-width cockpit displays</span></div>
-      <div class="stat"><b>1920 × 532</b><span>Digital cluster layouts</span></div>
-      <div class="stat"><b>Design → Code</b><span>Systems, prototypes, software</span></div>
+    <div class="gauge-card" aria-label="Interactive instrument cluster demo">
+      <div class="gauge-head"><span>Cluster · Live</span><b id="modeName">COMFORT</b></div>
+      <canvas id="gauge" width="520" height="380"></canvas>
+      <div class="modes">
+        <button data-mode="eco" type="button">ECO</button>
+        <button data-mode="comfort" type="button" class="on">COMFORT</button>
+        <button data-mode="sport" type="button">SPORT</button>
+      </div>
+      <div class="gauge-note">A tiny live gauge, drawn in code — <a href="/wutong/">open the full demo ↗</a></div>
     </div>
   </header>
 
-  <section class="reveal">
+  <div class="stats reveal">
+    <div class="stat"><b>5120 × 1440</b><span>Full-width cockpit displays</span></div>
+    <div class="stat"><b>1920 × 532</b><span>Digital cluster layouts</span></div>
+    <div class="stat"><b>Design → Code</b><span>Systems, prototypes, software</span></div>
+  </div>
+
+  <div class="marquee" aria-hidden="true"><div class="marquee-in" id="marquee"></div></div>
+
+  <section class="reveal" id="about">
     <div class="shead"><span class="no">01</span><h2>About</h2></div>
     <p class="lead">I design and build human–machine interfaces for cars — digital instrument clusters, in-vehicle infotainment and connected cockpit experiences. My work sits between design and engineering: I create interface design systems in Figma, build interactive prototypes, and develop working software, from HMI interface themes to utility mini-programs and automation tools.</p>
   </section>
@@ -133,7 +212,7 @@
     </div>
   </section>
 
-  <section class="reveal">
+  <section class="reveal" id="work">
     <div class="shead"><span class="no">03</span><h2>Selected Work</h2></div>
     <div class="grid">
       <div class="card">
@@ -163,7 +242,7 @@
     </div>
   </section>
 
-  <section class="reveal">
+  <section class="reveal" id="tools">
     <div class="shead"><span class="no">04</span><h2>Tools</h2></div>
     <ul class="skills">
       <li>Figma</li><li>Sketch</li><li>Photoshop</li><li>HMI Design Systems</li>
@@ -171,7 +250,7 @@
     </ul>
   </section>
 
-  <section class="reveal contact">
+  <section class="reveal contact" id="contact">
     <div class="shead"><span class="no">05</span><h2>Contact</h2></div>
     <p>GitHub: <a href="https://github.com/Alcindora">github.com/Alcindora</a><br>
     Email: <a href="mailto:leon.wutong@gmail.com">leon.wutong@gmail.com</a></p>
@@ -179,12 +258,100 @@
 
   <footer>
     <span>© 2026 Wu Tong</span>
-    <span>wutong.qd.je · Designed &amp; built by hand — no templates.</span>
+    <span>wutong.qd.je · <a href="http://wutong.pp.ua/">Domain Collection ↗</a> · Designed &amp; built by hand — no templates.</span>
   </footer>
 </div>
 <script>
+  // scroll reveal
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .08 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Nanjing clock
+  const clockEl = document.getElementById('clock');
+  const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Shanghai', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  setInterval(() => { clockEl.textContent = 'NANJING ' + fmt.format(new Date()); }, 1000);
+
+  // cursor spotlight + card glow / tilt
+  const root = document.documentElement;
+  addEventListener('pointermove', e => {
+    root.style.setProperty('--mx', (e.clientX / innerWidth * 100) + '%');
+    root.style.setProperty('--my', (e.clientY / innerHeight * 100) + '%');
+  }, { passive: true });
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('pointermove', e => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--cx', ((e.clientX - r.left) / r.width * 100) + '%');
+      card.style.setProperty('--cy', ((e.clientY - r.top) / r.height * 100) + '%');
+      const rx = ((e.clientY - r.top) / r.height - .5) * -5;
+      const ry = ((e.clientX - r.left) / r.width - .5) * 5;
+      card.style.transform = 'perspective(800px) rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg) translateY(-4px)';
+    });
+    card.addEventListener('pointerleave', () => { card.style.transform = ''; });
+  });
+
+  // marquee
+  const words = ['Instrument Clusters','Cockpit HMI','Design Systems','5120 × 1440','1920 × 532','Figma → Code','Prototyping','Mini-Programs'];
+  const seq = words.map(w => '<span>' + w + '<i>·</i></span>').join('');
+  document.getElementById('marquee').innerHTML = seq + seq;
+
+  // live gauge
+  const cv = document.getElementById('gauge'), ctx = cv.getContext('2d');
+  const MODES = {
+    eco:     { name: 'ECO',     color: '#4ade80', max: 180, target: 62 },
+    comfort: { name: 'COMFORT', color: '#f5b544', max: 240, target: 96 },
+    sport:   { name: 'SPORT',   color: '#ff5c5c', max: 300, target: 168 }
+  };
+  let mode = MODES.comfort, speed = 0, t = 0;
+  const modeName = document.getElementById('modeName');
+  document.querySelectorAll('.modes button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.modes button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    mode = MODES[b.dataset.mode];
+    modeName.textContent = mode.name;
+    root.style.setProperty('--mode', mode.color);
+  }));
+  root.style.setProperty('--mode', mode.color);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function draw() {
+    const W = cv.width, H = cv.height, cx = W / 2, cy = H / 2 + 26, R = 168;
+    const a0 = Math.PI * 0.78, a1 = Math.PI * 2.22;
+    t += 0.016;
+    const target = mode.target + Math.sin(t * 0.9) * mode.target * 0.14;
+    speed += (target - speed) * 0.045;
+    ctx.clearRect(0, 0, W, H);
+    // arc track
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(cx, cy, R, a0, a1); ctx.strokeStyle = 'rgba(255,255,255,.09)'; ctx.lineWidth = 13; ctx.stroke();
+    // arc value
+    const frac = Math.max(0, Math.min(1, speed / mode.max));
+    ctx.beginPath(); ctx.arc(cx, cy, R, a0, a0 + (a1 - a0) * frac); ctx.strokeStyle = mode.color; ctx.lineWidth = 13;
+    ctx.shadowColor = mode.color; ctx.shadowBlur = 18; ctx.stroke(); ctx.shadowBlur = 0;
+    // ticks + numbers
+    ctx.fillStyle = '#9aa7b5'; ctx.font = '600 13px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (let i = 0; i <= 10; i++) {
+      const a = a0 + (a1 - a0) * i / 10, big = i % 2 === 0;
+      const r1 = R - 22, r2 = R - (big ? 40 : 32);
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+      ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
+      ctx.strokeStyle = big ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.25)'; ctx.lineWidth = big ? 3 : 2; ctx.stroke();
+      if (big) ctx.fillText(String(Math.round(mode.max * i / 10)), cx + Math.cos(a) * (R - 62), cy + Math.sin(a) * (R - 62));
+    }
+    // needle
+    const na = a0 + (a1 - a0) * frac;
+    ctx.beginPath(); ctx.moveTo(cx - Math.cos(na) * 18, cy - Math.sin(na) * 18);
+    ctx.lineTo(cx + Math.cos(na) * (R - 48), cy + Math.sin(na) * (R - 48));
+    ctx.strokeStyle = '#eef1f5'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, 11, 0, Math.PI * 2); ctx.fillStyle = '#14171d'; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = mode.color; ctx.stroke();
+    // digital readout
+    ctx.fillStyle = '#eef1f5'; ctx.font = '800 54px "Segoe UI", sans-serif';
+    ctx.fillText(String(Math.round(speed)), cx, cy + 62);
+    ctx.fillStyle = '#6b7889'; ctx.font = '600 12px "Segoe UI", sans-serif';
+    ctx.fillText('km/h', cx, cy + 92);
+    if (!reduce) requestAnimationFrame(draw);
+  }
+  draw();
 </script>
 </body>
 </html>
