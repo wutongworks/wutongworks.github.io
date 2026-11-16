@@ -138,6 +138,44 @@
     .reveal{opacity:1;transform:none;transition:none}
     .aurora,.marquee-in,h1,.tag::before{animation:none}
   }
+
+  /* mobile */
+  img,canvas,svg{max-width:100%}
+  @media (max-width:860px){
+    .hero{overflow:hidden}
+    .gauge-card{max-width:520px;width:100%;margin:6px auto 0}
+  }
+  @media (max-width:640px){
+    .wrap{padding:92px 18px 48px}
+    .topbar-in{padding:10px 18px;gap:12px}
+    .clock{font-size:11px;letter-spacing:.08em}
+    h1{font-size:clamp(52px,17vw,84px);line-height:1.04;margin-top:20px}
+    h1 .cn{font-size:20px;letter-spacing:.30em;margin-top:10px}
+    .hero::before{font-size:150px;top:-28px;right:-14px}
+    .role{font-size:18px}
+    .loc{font-size:13px}
+    .tag{font-size:11px;letter-spacing:.16em;padding:5px 12px}
+    .cta{gap:10px;margin-top:24px}
+    .btn{padding:10px 18px;font-size:14px}
+    .cta .btn{max-width:100%;overflow-wrap:anywhere;text-align:center}
+    .stats{margin-top:32px}
+    .stat{flex:1 1 100%;padding:14px 18px}
+    .stat b{font-size:21px}
+    .marquee{margin-top:36px}
+    .marquee span{font-size:13px}
+    section{margin-top:48px}
+    p.lead,.contact p{font-size:15.5px}
+    .card{padding:20px 18px}
+    .gauge-card{padding:16px 12px 14px;border-radius:20px}
+    .modes{gap:6px;flex-wrap:wrap}
+    .modes button{padding:9px 14px;font-size:11px}
+    footer{margin-top:52px;flex-direction:column;gap:6px}
+  }
+  @media (max-width:380px){
+    h1{font-size:50px}
+    .clock{display:none}
+    .btn{width:100%}
+  }
 </style>
 </head>
 <body>
