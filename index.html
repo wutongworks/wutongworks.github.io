@@ -25,6 +25,12 @@
   .hint{position:fixed; z-index:5; left:50%; bottom:76px; transform:translateX(-50%);
     color:rgba(200,208,240,.5); font-size:10px; letter-spacing:.4em; text-indent:.4em; white-space:nowrap;
     pointer-events:none; transition:opacity 2.5s}
+  .mail{position:fixed; z-index:5; right:22px; bottom:26px; color:rgba(226,232,255,.62); text-decoration:none;
+    font-size:10px; letter-spacing:.3em; text-indent:.3em; padding:10px 16px; border-radius:999px;
+    border:1px solid rgba(160,170,255,.16); background:rgba(10,12,30,.28); backdrop-filter:blur(8px); transition:.3s; opacity:.6}
+  .mail:hover{opacity:1; color:#fff; border-color:rgba(190,200,255,.5); transform:translateY(-2px);
+    box-shadow:0 10px 34px -10px rgba(124,92,255,.65)}
+  @media (max-width:640px){ .mail{right:14px; bottom:20px} }
   @media (max-width:640px){ .ui{bottom:20px} .hint{bottom:68px; letter-spacing:.26em; text-indent:.26em} }
 </style>
 </head>
@@ -33,6 +39,7 @@
   <div class="vignette"></div>
   <div class="hint" id="hint">MOVE · DRAG · CLICK · SCROLL</div>
   <button class="ui" id="warpBtn">ENTER <b>✦</b></button>
+  <a class="mail" href="mailto:leon.wutong@gmail.com">EMAIL ↗</a>
 
 <script>
   const cv = document.getElementById('space'), ctx = cv.getContext('2d');
@@ -45,46 +52,11 @@
   const ptr = { x: -9999, y: -9999, down: false, downT: 0, lastX: 0, lastY: 0, dragV: 0 };
   let mx = 0, my = 0, tx = 0, ty = 0;
 
-  // ---------- milky way, pre-rendered ----------
-  const mw = document.createElement('canvas'); mw.width = mw.height = 1800;
-  (function paintMilkyWay() {
-    const c = mw.getContext('2d'), S = 1800, mid = S / 2;
-    c.save(); c.translate(mid, mid); c.rotate(-0.5);
-    // soft band glow
-    for (let i = 0; i < 46; i++) {
-      const x = (Math.random() - 0.5) * S * 1.15, y = (Math.random() - 0.5) * 190;
-      const r = 90 + Math.random() * 260;
-      const g = c.createRadialGradient(x, y, 0, x, y, r);
-      const tint = Math.random() < 0.5 ? '120,130,220' : (Math.random() < 0.5 ? '150,120,200' : '100,140,190');
-      g.addColorStop(0, `rgba(${tint},${0.028 + Math.random() * 0.03})`); g.addColorStop(1, 'rgba(0,0,0,0)');
-      c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
-    }
-    // dust lanes (dark)
-    for (let i = 0; i < 22; i++) {
-      const x = (Math.random() - 0.5) * S * 1.1, y = (Math.random() - 0.5) * 90;
-      const r = 40 + Math.random() * 130;
-      const g = c.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, 'rgba(1,2,10,0.20)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-      c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
-    }
-    // dense faint stars along the band
-    for (let i = 0; i < 5200; i++) {
-      const x = (Math.random() - 0.5) * S * 1.2;
-      const y = (Math.random() + Math.random() + Math.random() - 1.5) / 1.5 * 150;
-      const a = Math.random() * 0.5 + 0.06, r = Math.random() * 1.05 + 0.2;
-      const warm = Math.random();
-      c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2);
-      c.fillStyle = warm < 0.14 ? `rgba(255,214,160,${a})` : warm < 0.3 ? `rgba(170,200,255,${a})` : `rgba(235,240,255,${a})`;
-      c.fill();
-    }
-    c.restore();
-  })();
-
   // ---------- dynamic stars ----------
   let stars = [];
   function buildStars() {
     stars = [];
-    const n = Math.min(850, Math.floor(W * H / 2100));
+    const n = Math.min(1150, Math.floor(W * H / 1650));
     for (let i = 0; i < n; i++) {
       const kind = Math.random();
       stars.push({
@@ -100,7 +72,7 @@
 
   // ---------- accretion disk ----------
   const disk = [];
-  for (let i = 0; i < 850; i++) {
+  for (let i = 0; i < 1150; i++) {
     const rad = 1.3 + Math.pow(Math.random(), 1.5) * 2.1;
     disk.push({ a: Math.random() * Math.PI * 2, rad,
       sp: 0.62 / Math.pow(rad, 1.5) * (0.75 + Math.random() * 0.5),
@@ -154,7 +126,7 @@
     cv.style.width = W + 'px'; cv.style.height = H + 'px';
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     CX = W / 2; CY = H * 0.46; UNIT = Math.min(W, H);
-    R = UNIT * 0.155;
+    R = UNIT * 0.19;
     buildStars();
   }
   addEventListener('resize', resize);
@@ -185,13 +157,21 @@
     base.addColorStop(0, '#080b26'); base.addColorStop(0.45, '#03040f'); base.addColorStop(1, '#01020a');
     ctx.fillStyle = base; ctx.fillRect(0, 0, W, H);
 
-    // milky way (slow counter-drift, zoom-aware)
-    ctx.save();
-    ctx.translate(CX + mx * 10, CY + my * 7); ctx.rotate(rot * 0.35 - 0.12); ctx.scale(zoom, zoom);
-    const mws = UNIT * 2.6;
-    ctx.globalAlpha = 0.85;
-    ctx.drawImage(mw, -mws / 2, -mws / 2, mws, mws);
-    ctx.restore(); ctx.globalAlpha = 1;
+    // nebula colour field — huge soft clouds, slow drift, screen-blended
+    ctx.save(); ctx.globalCompositeOperation = 'screen';
+    const clouds = [
+      [0.22 + 0.03 * Math.sin(t * 0.11), 0.24 + 0.02 * Math.cos(t * 0.09), 0.62, '109,40,217', 0.34],
+      [0.8 + 0.03 * Math.cos(t * 0.08), 0.3 + 0.03 * Math.sin(t * 0.1), 0.55, '37,99,235', 0.30],
+      [0.55 + 0.04 * Math.sin(t * 0.07 + 2), 0.85 + 0.02 * Math.cos(t * 0.12), 0.5, '190,40,120', 0.20],
+      [0.12 + 0.02 * Math.cos(t * 0.1 + 4), 0.78 + 0.03 * Math.sin(t * 0.08), 0.45, '13,120,136', 0.20]
+    ];
+    for (const [fx, fy, fr, rgb, al] of clouds) {
+      const nx = fx * W + mx * 14, ny = fy * H + my * 10, nr = fr * Math.max(W, H);
+      const ng = ctx.createRadialGradient(nx, ny, 0, nx, ny, nr);
+      ng.addColorStop(0, `rgba(${rgb},${al})`); ng.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = ng; ctx.fillRect(0, 0, W, H);
+    }
+    ctx.restore();
 
     // stars
     for (const s of stars) {
