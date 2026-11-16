@@ -4,64 +4,148 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>✦</title>
-<meta name="description" content="Deep space. A living starfield, nebulae and a black hole, drawn in code.">
+<meta name="description" content="Deep space, alive. Drag, click, scroll — the universe answers.">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
   body{background:#01020a; overflow:hidden; font-family:"Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-    -webkit-font-smoothing:antialiased}
+    -webkit-font-smoothing:antialiased; touch-action:none; cursor:crosshair}
   ::selection{background:#7c5cff; color:#fff}
-
   #space{position:fixed; inset:0; display:block}
-
-  /* nebula wash above canvas stars, below ui */
-  .nebula{position:fixed; inset:-15%; pointer-events:none; filter:blur(60px) saturate(1.3); opacity:.8; mix-blend-mode:screen}
-  .nebula i{position:absolute; border-radius:50%}
-  .nebula i:nth-child(1){width:52vmax;height:52vmax;left:-6%;top:-12%;background:radial-gradient(circle at 40% 40%, rgba(109,40,217,.34), transparent 62%);animation:drift1 30s ease-in-out infinite alternate}
-  .nebula i:nth-child(2){width:44vmax;height:44vmax;right:-8%;top:16%;background:radial-gradient(circle at 55% 45%, rgba(37,99,235,.28), transparent 62%);animation:drift2 36s ease-in-out infinite alternate}
-  .nebula i:nth-child(3){width:36vmax;height:36vmax;left:30%;bottom:-18%;background:radial-gradient(circle at 50% 50%, rgba(13,148,136,.20), transparent 60%);animation:drift1 42s ease-in-out infinite alternate-reverse}
-  .nebula i:nth-child(4){width:26vmax;height:26vmax;right:22%;bottom:-6%;background:radial-gradient(circle at 50% 50%, rgba(219,39,119,.14), transparent 60%);animation:drift2 27s ease-in-out infinite alternate-reverse}
-  @keyframes drift1{from{transform:translate(0,0) scale(1)}to{transform:translate(6vmax,4vmax) scale(1.15)}}
-  @keyframes drift2{from{transform:translate(0,0) scale(1.1)}to{transform:translate(-5vmax,5vmax) scale(.95)}}
-
-  .vignette{position:fixed; inset:0; pointer-events:none;
-    background:radial-gradient(ellipse 105% 90% at 50% 46%, transparent 55%, rgba(0,0,5,.55) 100%)}
-
-  /* minimal ui */
-  .ui{position:fixed; z-index:5; color:rgba(226,232,255,.62); text-decoration:none;
-    font-size:10px; letter-spacing:.3em; text-indent:.3em; padding:10px 16px; border-radius:999px;
-    border:1px solid rgba(160,170,255,.16); background:rgba(10,12,30,.28); backdrop-filter:blur(8px);
-    transition:.3s; opacity:.55}
-  .ui:hover{opacity:1; color:#fff; border-color:rgba(190,200,255,.5); transform:translateY(-2px); box-shadow:0 10px 34px -10px rgba(124,92,255,.65)}
-  .ui.gh{left:22px; bottom:22px}
-  .ui.mail{right:22px; bottom:22px}
-  .ui.enter{left:50%; bottom:26px; transform:translateX(-50%); font-size:11px; padding:13px 24px; opacity:.75}
-  .ui.enter:hover{transform:translateX(-50%) translateY(-2px)}
-  .ui.enter b{color:#a78bfa; font-weight:800}
-
-  @media (max-width:640px){
-    .ui.gh{left:14px; bottom:16px} .ui.mail{right:14px; bottom:16px}
-    .ui.enter{bottom:64px}
-  }
-  @media (prefers-reduced-motion: reduce){
-    .nebula i{animation:none}
-  }
+  .vignette{position:fixed; inset:0; pointer-events:none; z-index:2;
+    background:radial-gradient(ellipse 105% 90% at 50% 46%, transparent 55%, rgba(0,0,5,.5) 100%)}
+  .ui{position:fixed; z-index:5; left:50%; bottom:26px; transform:translateX(-50%);
+    color:rgba(226,232,255,.75); font-size:11px; letter-spacing:.34em; text-indent:.34em;
+    padding:13px 26px; border-radius:999px; border:1px solid rgba(160,170,255,.2);
+    background:rgba(10,12,30,.3); backdrop-filter:blur(8px); cursor:pointer; transition:.3s;
+    font-family:inherit}
+  .ui:hover{color:#fff; border-color:rgba(190,200,255,.55); transform:translateX(-50%) translateY(-2px);
+    box-shadow:0 10px 34px -10px rgba(124,92,255,.7)}
+  .ui b{color:#a78bfa; font-weight:800}
+  .hint{position:fixed; z-index:5; left:50%; bottom:76px; transform:translateX(-50%);
+    color:rgba(200,208,240,.5); font-size:10px; letter-spacing:.4em; text-indent:.4em; white-space:nowrap;
+    pointer-events:none; transition:opacity 2.5s}
+  @media (max-width:640px){ .ui{bottom:20px} .hint{bottom:68px; letter-spacing:.26em; text-indent:.26em} }
 </style>
 </head>
 <body>
   <canvas id="space"></canvas>
-  <div class="nebula"><i></i><i></i><i></i><i></i></div>
   <div class="vignette"></div>
-
-  <a class="ui gh" href="https://github.com/wutongworks">GITHUB ↗</a>
-  <a class="ui enter" href="/wutong/">ENTER <b>→</b></a>
-  <a class="ui mail" href="mailto:leon.wutong@gmail.com">EMAIL ↗</a>
+  <div class="hint" id="hint">MOVE · DRAG · CLICK · SCROLL</div>
+  <button class="ui" id="warpBtn">ENTER <b>✦</b></button>
 
 <script>
   const cv = document.getElementById('space'), ctx = cv.getContext('2d');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let W = 0, H = 0, DPR = 1, CX = 0, CY = 0, R = 0;
+  let W = 0, H = 0, DPR = 1, CX = 0, CY = 0, R = 0, UNIT = 0;
+
+  // view state
+  let zoom = 1, zoomT = 1, rot = 0, rotV = 0;
+  let warp = 0, warpDir = 0;
+  const ptr = { x: -9999, y: -9999, down: false, downT: 0, lastX: 0, lastY: 0, dragV: 0 };
   let mx = 0, my = 0, tx = 0, ty = 0;
+
+  // ---------- milky way, pre-rendered ----------
+  const mw = document.createElement('canvas'); mw.width = mw.height = 1800;
+  (function paintMilkyWay() {
+    const c = mw.getContext('2d'), S = 1800, mid = S / 2;
+    c.save(); c.translate(mid, mid); c.rotate(-0.5);
+    // soft band glow
+    for (let i = 0; i < 46; i++) {
+      const x = (Math.random() - 0.5) * S * 1.15, y = (Math.random() - 0.5) * 190;
+      const r = 90 + Math.random() * 260;
+      const g = c.createRadialGradient(x, y, 0, x, y, r);
+      const tint = Math.random() < 0.5 ? '120,130,220' : (Math.random() < 0.5 ? '150,120,200' : '100,140,190');
+      g.addColorStop(0, `rgba(${tint},${0.028 + Math.random() * 0.03})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    // dust lanes (dark)
+    for (let i = 0; i < 22; i++) {
+      const x = (Math.random() - 0.5) * S * 1.1, y = (Math.random() - 0.5) * 90;
+      const r = 40 + Math.random() * 130;
+      const g = c.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(1,2,10,0.20)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    // dense faint stars along the band
+    for (let i = 0; i < 5200; i++) {
+      const x = (Math.random() - 0.5) * S * 1.2;
+      const y = (Math.random() + Math.random() + Math.random() - 1.5) / 1.5 * 150;
+      const a = Math.random() * 0.5 + 0.06, r = Math.random() * 1.05 + 0.2;
+      const warm = Math.random();
+      c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2);
+      c.fillStyle = warm < 0.14 ? `rgba(255,214,160,${a})` : warm < 0.3 ? `rgba(170,200,255,${a})` : `rgba(235,240,255,${a})`;
+      c.fill();
+    }
+    c.restore();
+  })();
+
+  // ---------- dynamic stars ----------
+  let stars = [];
+  function buildStars() {
+    stars = [];
+    const n = Math.min(850, Math.floor(W * H / 2100));
+    for (let i = 0; i < n; i++) {
+      const kind = Math.random();
+      stars.push({
+        x: (Math.random() * 2 - 1) * 1.25, y: (Math.random() * 2 - 1) * 1.05,
+        z: 0.25 + Math.random() * 0.75,
+        r: kind < 0.02 ? 2.3 + Math.random() * 1.3 : Math.random() * 1.35 + 0.25,
+        spike: kind < 0.02,
+        tw: Math.random() * Math.PI * 2,
+        hue: Math.random() < 0.13 ? 210 + Math.random() * 40 : (Math.random() < 0.1 ? 38 : 0)
+      });
+    }
+  }
+
+  // ---------- accretion disk ----------
+  const disk = [];
+  for (let i = 0; i < 850; i++) {
+    const rad = 1.3 + Math.pow(Math.random(), 1.5) * 2.1;
+    disk.push({ a: Math.random() * Math.PI * 2, rad,
+      sp: 0.62 / Math.pow(rad, 1.5) * (0.75 + Math.random() * 0.5),
+      s: Math.random() * 1.7 + 0.4, warm: Math.random() });
+  }
+
+  // ---------- bursts & trail & meteors ----------
+  let bursts = [], trail = [], meteors = [];
+  function spawnBurst(x, y, power) {
+    const parts = [], n = Math.floor(90 * power);
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, v = (Math.random() * 5.2 + 0.6) * power;
+      parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1, decay: 0.008 + Math.random() * 0.02,
+        hue: Math.random() < 0.3 ? 210 + Math.random() * 50 : 30 + Math.random() * 30, s: Math.random() * 2 + 0.5 });
+    }
+    bursts.push({ parts, ring: 0, ringA: 0.8 * power, x, y });
+    flash = Math.min(0.5, flash + 0.22 * power);
+  }
+  let flash = 0;
+  function spawnMeteor() {
+    meteors.push({ x: Math.random() * W * 0.7 + W * 0.2, y: Math.random() * H * 0.3, vx: -(6 + Math.random() * 5), vy: 3.4 + Math.random() * 2.4, life: 1 });
+  }
+
+  // ---------- interaction ----------
+  addEventListener('pointermove', e => {
+    tx = e.clientX / W - 0.5; ty = e.clientY / H - 0.5;
+    if (ptr.down) { rotV = (e.clientX - ptr.lastX) * 0.00006; rot += (e.clientX - ptr.lastX) * 0.00045; }
+    ptr.lastX = e.clientX; ptr.lastY = e.clientY;
+    ptr.x = e.clientX; ptr.y = e.clientY;
+    trail.push({ x: e.clientX, y: e.clientY, life: 1 });
+    if (trail.length > 42) trail.shift();
+  }, { passive: true });
+  addEventListener('pointerdown', e => {
+    if (e.target.closest('.ui')) return;
+    ptr.down = true; ptr.downT = performance.now(); ptr.lastX = e.clientX; ptr.lastY = e.clientY;
+  });
+  addEventListener('pointerup', e => {
+    if (ptr.down && performance.now() - ptr.downT < 260 && !e.target.closest('.ui'))
+      spawnBurst(e.clientX, e.clientY, 1);
+    ptr.down = false;
+  });
+  addEventListener('wheel', e => { zoomT = Math.max(0.62, Math.min(1.9, zoomT - e.deltaY * 0.0011)); }, { passive: true });
+  addEventListener('dblclick', e => { if (!e.target.closest('.ui')) spawnBurst(e.clientX, e.clientY, 1.7); });
+  document.getElementById('warpBtn').addEventListener('click', () => { if (warpDir === 0) warpDir = 1; });
+  setTimeout(() => { document.getElementById('hint').style.opacity = '0.22'; }, 6000);
 
   function resize() {
     DPR = Math.min(devicePixelRatio || 1, 2);
@@ -69,74 +153,90 @@
     cv.width = W * DPR; cv.height = H * DPR;
     cv.style.width = W + 'px'; cv.style.height = H + 'px';
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    CX = W / 2; CY = H * 0.46;
-    R = Math.min(W, H) * 0.16;
+    CX = W / 2; CY = H * 0.46; UNIT = Math.min(W, H);
+    R = UNIT * 0.155;
     buildStars();
   }
-
-  // ---- starfield: 3 depth layers + warp drift ----
-  let stars = [];
-  function buildStars() {
-    stars = [];
-    const n = Math.min(900, Math.floor(W * H / 1600));
-    for (let i = 0; i < n; i++) {
-      stars.push({
-        x: Math.random() * W, y: Math.random() * H,
-        z: 0.25 + Math.random() * 0.75,          // depth
-        r: Math.random() * 1.4 + 0.2,
-        tw: Math.random() * Math.PI * 2,          // twinkle phase
-        hue: Math.random() < 0.12 ? (200 + Math.random() * 60) : (Math.random() < 0.08 ? 35 : 0)
-      });
-    }
-  }
-
-  // ---- accretion disk particles ----
-  const disk = [];
-  for (let i = 0; i < 700; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const rad = 1.25 + Math.pow(Math.random(), 1.6) * 1.9;   // in units of R
-    disk.push({ a, rad, sp: (0.55 / Math.pow(rad, 1.5)) * (0.7 + Math.random() * 0.6), s: Math.random() * 1.8 + 0.4,
-      warm: Math.random() });
-  }
-
-  // ---- shooting stars ----
-  let meteors = [];
-  function spawnMeteor() {
-    meteors.push({ x: Math.random() * W * 0.7 + W * 0.2, y: Math.random() * H * 0.3, vx: -(6 + Math.random() * 5), vy: 3.4 + Math.random() * 2.4, life: 1 });
-  }
-
-  addEventListener('pointermove', e => { tx = (e.clientX / W - 0.5); ty = (e.clientY / H - 0.5); }, { passive: true });
   addEventListener('resize', resize);
   resize();
 
   let t = 0;
+  function project(s) {
+    // rotate + zoom + depth parallax
+    const ca = Math.cos(rot * s.z), sa = Math.sin(rot * s.z);
+    let x = (s.x * ca - s.y * sa) * UNIT * 0.62 * zoom;
+    let y = (s.x * sa + s.y * ca) * UNIT * 0.62 * zoom;
+    // warp: radial rush
+    if (warp > 0.01) { const d = Math.hypot(s.x, s.y) + 0.001; const push = warp * s.z * UNIT * 0.55 * d; x += s.x / d * push * zoom; y += s.y / d * push * zoom; }
+    return [CX + x + mx * 20 * s.z, CY + y + my * 13 * s.z];
+  }
+
   function frame() {
     t += 0.016;
-    mx += (tx - mx) * 0.03; my += (ty - my) * 0.03;
-    const px = mx * 18, py = my * 12;
+    mx += (tx - mx) * 0.035; my += (ty - my) * 0.035;
+    zoom += (zoomT - zoom) * 0.06;
+    rot += rotV; rotV *= 0.955;
+    if (warpDir === 1) { warp += 0.02; if (warp >= 1) warpDir = -1; }
+    else if (warpDir === -1) { warp -= 0.012; if (warp <= 0) { warp = 0; warpDir = 0; } }
+    flash *= 0.92;
 
-    // deep space base with subtle radial lift at centre
     ctx.clearRect(0, 0, W, H);
-    const base = ctx.createRadialGradient(CX + px * 0.4, CY + py * 0.4, 0, CX, CY, Math.max(W, H) * 0.75);
-    base.addColorStop(0, '#070a24'); base.addColorStop(0.45, '#03040f'); base.addColorStop(1, '#01020a');
+    const base = ctx.createRadialGradient(CX + mx * 8, CY + my * 6, 0, CX, CY, Math.max(W, H) * 0.78);
+    base.addColorStop(0, '#080b26'); base.addColorStop(0.45, '#03040f'); base.addColorStop(1, '#01020a');
     ctx.fillStyle = base; ctx.fillRect(0, 0, W, H);
+
+    // milky way (slow counter-drift, zoom-aware)
+    ctx.save();
+    ctx.translate(CX + mx * 10, CY + my * 7); ctx.rotate(rot * 0.35 - 0.12); ctx.scale(zoom, zoom);
+    const mws = UNIT * 2.6;
+    ctx.globalAlpha = 0.85;
+    ctx.drawImage(mw, -mws / 2, -mws / 2, mws, mws);
+    ctx.restore(); ctx.globalAlpha = 1;
 
     // stars
     for (const s of stars) {
-      s.y += s.z * 0.14; s.x += s.z * 0.05;
-      if (s.y > H + 2) { s.y = -2; s.x = Math.random() * W; }
-      if (s.x > W + 2) { s.x = -2; }
-      const tw = 0.55 + 0.45 * Math.sin(t * (1 + s.z * 2) + s.tw);
-      const a = tw * (0.35 + s.z * 0.65);
-      ctx.beginPath();
-      ctx.arc(s.x + px * s.z, s.y + py * s.z, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = s.hue ? `hsla(${s.hue}, 90%, 78%, ${a})` : `rgba(235,240,255,${a})`;
-      if (s.z > 0.85 && s.r > 1.1) { ctx.shadowColor = 'rgba(200,210,255,.9)'; ctx.shadowBlur = 8; } else ctx.shadowBlur = 0;
-      ctx.fill(); ctx.shadowBlur = 0;
+      const [sx, sy] = project(s);
+      if (sx < -30 || sx > W + 30 || sy < -30 || sy > H + 30) continue;
+      // gravity lens: stars near the cursor bend away slightly
+      let gx = sx, gy = sy;
+      const dx = sx - ptr.x, dy = sy - ptr.y, d2 = dx * dx + dy * dy;
+      if (d2 < 32400 && d2 > 1) { const d = Math.sqrt(d2), f = (1 - d / 180) * 13 * s.z; gx += dx / d * f; gy += dy / d * f; }
+      const tw = 0.55 + 0.45 * Math.sin(t * (1 + s.z * 2.2) + s.tw);
+      const a = tw * (0.3 + s.z * 0.7) * (1 + warp * 0.6);
+      if (warp > 0.03) {
+        const [ox, oy] = [CX + (sx - CX) * (1 - warp * 0.16 * s.z), CY + (sy - CY) * (1 - warp * 0.16 * s.z)];
+        ctx.strokeStyle = s.hue ? `hsla(${s.hue},90%,80%,${a * 0.8})` : `rgba(235,240,255,${a * 0.8})`;
+        ctx.lineWidth = s.r * 0.8; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(gx, gy); ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.arc(gx, gy, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = s.hue ? `hsla(${s.hue}, 90%, 79%, ${a})` : `rgba(235,240,255,${a})`;
+        if (s.spike || (s.z > 0.85 && s.r > 1.15)) { ctx.shadowColor = 'rgba(200,210,255,.9)'; ctx.shadowBlur = 9; }
+        ctx.fill(); ctx.shadowBlur = 0;
+        if (s.spike) { // diffraction cross
+          const L = s.r * 7 * tw;
+          ctx.strokeStyle = `rgba(220,228,255,${a * 0.5})`; ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(gx - L, gy); ctx.lineTo(gx + L, gy);
+          ctx.moveTo(gx, gy - L); ctx.lineTo(gx, gy + L);
+          ctx.stroke();
+        }
+      }
     }
 
+    // comet trail behind cursor
+    for (let i = 0; i < trail.length; i++) {
+      const p = trail[i]; p.life -= 0.03;
+      if (p.life <= 0) continue;
+      const f = i / trail.length;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 0.4 + f * 2.4, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(167,139,250,${p.life * f * 0.5})`;
+      ctx.shadowColor = 'rgba(150,120,255,.8)'; ctx.shadowBlur = 10; ctx.fill(); ctx.shadowBlur = 0;
+    }
+    trail = trail.filter(p => p.life > 0);
+
     // meteors
-    if (Math.random() < 0.006 && meteors.length < 2) spawnMeteor();
+    if (Math.random() < 0.005 && meteors.length < 2) spawnMeteor();
     meteors = meteors.filter(m => m.life > 0);
     for (const m of meteors) {
       m.x += m.vx; m.y += m.vy; m.life -= 0.012;
@@ -146,52 +246,92 @@
       ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x - m.vx * 9, m.y - m.vy * 9); ctx.stroke();
     }
 
-    const cx = CX + px, cy = CY + py;
+    const cx = CX + mx * 18, cy = CY + my * 12, Rz = R * zoom * (1 + warp * 0.25);
 
-    // ---- black hole ----
-    // outer glow
-    let g = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 3.6);
+    // ambient glow
+    let g = ctx.createRadialGradient(cx, cy, Rz * 0.6, cx, cy, Rz * 3.8);
     g.addColorStop(0, 'rgba(150,110,255,.20)'); g.addColorStop(0.4, 'rgba(90,70,220,.10)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g; ctx.fillRect(cx - R * 3.6, cy - R * 3.6, R * 7.2, R * 7.2);
+    ctx.fillStyle = g; ctx.fillRect(cx - Rz * 3.8, cy - Rz * 3.8, Rz * 7.6, Rz * 7.6);
 
-    // disk back half
-    drawDisk(cx, cy, Math.PI, Math.PI * 2);
-    // photon ring + event horizon
-    ctx.beginPath(); ctx.arc(cx, cy, R * 1.06, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255,214,150,.85)'; ctx.lineWidth = 2.4;
+    drawDisk(cx, cy, Rz, true);   // back half
+
+    // gravitational lensing: far-side disk bent over / under the shadow
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,196,120,.34)'; ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(255,170,90,.8)'; ctx.shadowBlur = 18;
+    ctx.lineWidth = Rz * 0.13;
+    ctx.beginPath(); ctx.arc(cx, cy, Rz * 1.24, Math.PI * 1.18, Math.PI * 1.82); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,180,105,.20)';
+    ctx.lineWidth = Rz * 0.10;
+    ctx.beginPath(); ctx.arc(cx, cy, Rz * 1.24, Math.PI * 0.18, Math.PI * 0.82); ctx.stroke();
+    ctx.restore();
+
+    // photon ring + shadow
+    ctx.beginPath(); ctx.arc(cx, cy, Rz * 1.05, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255,216,155,${0.8 + 0.14 * Math.sin(t * 7)})`; ctx.lineWidth = 2.2;
     ctx.shadowColor = 'rgba(255,180,90,.95)'; ctx.shadowBlur = 26; ctx.stroke(); ctx.shadowBlur = 0;
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
-    const hole = ctx.createRadialGradient(cx, cy, R * 0.2, cx, cy, R);
-    hole.addColorStop(0, '#000'); hole.addColorStop(0.85, '#000'); hole.addColorStop(1, 'rgba(0,0,0,.92)');
-    ctx.fillStyle = hole; ctx.fill();
-    // disk front half (passes in front of the hole)
-    drawDisk(cx, cy, 0, Math.PI);
+    ctx.beginPath(); ctx.arc(cx, cy, Rz, 0, Math.PI * 2);
+    ctx.fillStyle = '#000'; ctx.fill();
 
-    function drawDisk(cx, cy, a0, a1) {
-      ctx.save();
-      ctx.translate(cx, cy); ctx.scale(1, 0.36); ctx.translate(-cx, -cy);
-      // disk band glow
-      ctx.beginPath(); ctx.arc(cx, cy, R * 2.15, a0, a1);
-      ctx.strokeStyle = 'rgba(255,170,80,.13)'; ctx.lineWidth = R * 0.85;
-      ctx.shadowColor = 'rgba(255,150,60,.55)'; ctx.shadowBlur = 34; ctx.stroke(); ctx.shadowBlur = 0;
-      ctx.beginPath(); ctx.arc(cx, cy, R * 1.62, a0, a1);
-      ctx.strokeStyle = 'rgba(255,205,130,.20)'; ctx.lineWidth = R * 0.4; ctx.stroke();
-      // particles
-      for (const p of disk) {
-        if (p.a < a0 || p.a > a1) continue;
-        const x = cx + Math.cos(p.a) * R * p.rad, y = cy + Math.sin(p.a) * R * p.rad;
-        const hot = p.warm;
-        ctx.beginPath(); ctx.arc(x, y, p.s * 2.2, 0, Math.PI * 2);
-        ctx.fillStyle = hot > 0.75 ? 'rgba(255,226,170,.95)' : hot > 0.4 ? 'rgba(255,178,102,.8)' : 'rgba(196,150,255,.65)';
-        ctx.fill();
+    drawDisk(cx, cy, Rz, false);  // front half
+
+    // bursts
+    for (const b of bursts) {
+      b.ring += 3.4; b.ringA *= 0.94;
+      ctx.beginPath(); ctx.arc(b.x, b.y, b.ring, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(190,170,255,${b.ringA})`; ctx.lineWidth = 1.6; ctx.stroke();
+      for (const p of b.parts) {
+        p.x += p.vx; p.y += p.vy; p.vx *= 0.985; p.vy *= 0.985; p.life -= p.decay;
+        if (p.life <= 0) continue;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.s * p.life + 0.2, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${p.hue}, 95%, 76%, ${p.life})`;
+        ctx.shadowColor = `hsla(${p.hue},95%,70%,.9)`; ctx.shadowBlur = 8; ctx.fill(); ctx.shadowBlur = 0;
       }
-      ctx.restore();
-      // advance particles (only once per frame, during back pass)
-      if (a0 === Math.PI) for (const p of disk) { p.a += p.sp * 0.016; if (p.a > Math.PI * 2) p.a -= Math.PI * 2; }
+      b.parts = b.parts.filter(p => p.life > 0);
+    }
+    bursts = bursts.filter(b => b.parts.length || b.ringA > 0.02);
+
+    // warp flash / burst flash
+    if (flash > 0.004 || warp > 0.02) {
+      ctx.fillStyle = `rgba(210,200,255,${flash + warp * 0.05})`;
+      ctx.fillRect(0, 0, W, H);
     }
 
     if (!reduce) requestAnimationFrame(frame);
   }
+
+  function drawDisk(cx, cy, Rz, back) {
+    ctx.save();
+    ctx.translate(cx, cy); ctx.scale(1, 0.34); ctx.translate(-cx, -cy);
+    // band glow — two passes for a hot core
+    ctx.beginPath(); ctx.arc(cx, cy, Rz * 2.2, back ? Math.PI : 0, back ? Math.PI * 2 : Math.PI);
+    ctx.strokeStyle = 'rgba(255,168,80,.12)'; ctx.lineWidth = Rz * 0.95;
+    ctx.shadowColor = 'rgba(255,150,60,.5)'; ctx.shadowBlur = 36; ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.arc(cx, cy, Rz * 1.66, back ? Math.PI : 0, back ? Math.PI * 2 : Math.PI);
+    ctx.strokeStyle = 'rgba(255,206,132,.20)'; ctx.lineWidth = Rz * 0.42; ctx.stroke();
+    // particles with doppler beaming: left (approaching) side hotter & brighter
+    for (const p of disk) {
+      const front = Math.sin(p.a) > 0;
+      if (back === front) continue;
+      let x = cx + Math.cos(p.a) * Rz * p.rad, y = cy + Math.sin(p.a) * Rz * p.rad;
+      // cursor gravity swirls nearby disk matter
+      const sx = x, sy = cy + (y - cy) * 0.34;
+      const dx = sx - ptr.x, dy = sy - ptr.y, d2 = dx * dx + dy * dy;
+      let ox = 0, oy = 0;
+      if (d2 < 25600 && d2 > 4) { const d = Math.sqrt(d2), f = (1 - d / 160) * 10; ox = -dy / d * f; oy = dx / d * f * 0.34; }
+      const beam = 0.55 + 0.75 * Math.max(0, -Math.cos(p.a));       // approaching side boost
+      const dim = 0.5 + 0.5 * Math.min(1, beam);
+      const hot = p.warm;
+      ctx.beginPath(); ctx.arc(x + ox, y + oy, p.s * 2.1 * (0.7 + 0.5 * dim), 0, Math.PI * 2);
+      ctx.fillStyle = hot > 0.78 ? `rgba(255,232,180,${0.95 * dim})`
+        : hot > 0.42 ? `rgba(255,178,102,${0.82 * dim})`
+        : `rgba(198,150,255,${0.62 * dim})`;
+      ctx.fill();
+    }
+    ctx.restore();
+    if (back) for (const p of disk) { p.a += p.sp * 0.016 * (1 + warp * 2.2); if (p.a > Math.PI * 2) p.a -= Math.PI * 2; }
+  }
+
   frame();
 </script>
 </body>
